@@ -84,11 +84,11 @@ class ArticlePage extends Page {
         }
     }
 
-    public function TagsList() {
-        if($this->Tags()->exists()) {
-            return $this->Tags();
-        }
-    }
+    // public function TagsList() {
+    //     if($this->Tags()->exists()) {
+    //         return $this->Tags();
+    //     }
+    // }
 
 }
 
@@ -96,7 +96,8 @@ class ArticlePage_Controller extends Page_Controller{
 
     private static $allowed_actions = array(
         'CommentForm',
-        'CommentDo'
+        'CommentDo',
+        'tag'
     );
 
     public function CommentForm(){
@@ -164,5 +165,31 @@ class ArticlePage_Controller extends Page_Controller{
 
     //     return $this->redirectBack();
     // }
+
+    public function tag(SS_HTTPRequest $request) {
+        $urlSegment = $request->param('ID');
+
+        $tag = TagData::get()->filter('CustomURLSegment', $urlSegment)->first();
+
+        // print_r($urlSegment);
+        // print_r($tag->ID);
+        // die;
+
+        if ($tag) {
+            // Fetch articles with the same tag
+            $articlesWithTag = ArticlePage::get()->filter('Tags.ID', $tag->ID);
+
+            $data = array(
+                'ArticlesWithTag' => $articlesWithTag,
+                'Tag' => $tag,
+            );
+
+            // Render the template with articles having the same tag
+            return $this->customise($data)->renderWith(array('ArticleFilterTag', 'Page'));
+        } else {
+            // If the tag is not found, handle accordingly (e.g., show a 404 page)
+            return $this->httpError(404,'tag not found.');
+        }
+    }
 
 }
